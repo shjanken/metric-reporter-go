@@ -1,4 +1,4 @@
-package reporter
+package domain
 
 // General 包含了主要就监控项目
 type General struct {

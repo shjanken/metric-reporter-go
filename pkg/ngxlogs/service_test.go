@@ -1,9 +1,10 @@
-package reporter
+package ngxlogs
 
 import (
 	"strings"
 	"testing"
 
+	"github.com/shjanken/metric_reporter/pkg/ngxlogs/domain"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -11,12 +12,12 @@ type MockDestionatin struct {
 	invoke bool
 }
 
-func (mock *MockDestionatin) SendReport(m *Metric) error {
+func (mock *MockDestionatin) SendReport(m *domain.Metric) error {
 	mock.invoke = true
 	return nil
 }
 
-func TestReadMetric(t *testing.T) {
+func TestReporter(t *testing.T) {
 	Convey("test ReadMetric functon", t, func() {
 		Convey("read json from string", func() {
 			json := `
@@ -52,12 +53,14 @@ func TestReadMetric(t *testing.T) {
 			So(m.Bandwidth, ShouldEqual, 19121648751)
 			So(m.Visitors, ShouldEqual, 54233)
 		})
+	})
 
-		Convey("test send function", func() {
+	Convey("test send function", t, func() {
+		Convey("service's send function should invoke Destination.SendReport func", func() {
 			mockDest := &MockDestionatin{false}
-			s := New(nil, mockDest)
+			s := New(nil, mockDest) // send is not necessary
 
-			err := s.Send(nil)
+			err := s.Send(nil) // metric is not necessary
 
 			So(err, ShouldBeNil)
 			So(mockDest.invoke, ShouldBeTrue)
