@@ -7,6 +7,15 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+type MockDestionatin struct {
+	invoke bool
+}
+
+func (mock *MockDestionatin) SendReport(m *Metric) error {
+	mock.invoke = true
+	return nil
+}
+
 func TestReadMetric(t *testing.T) {
 	Convey("test ReadMetric functon", t, func() {
 		Convey("read json from string", func() {
@@ -54,13 +63,4 @@ func TestReadMetric(t *testing.T) {
 			So(mockDest.invoke, ShouldBeTrue)
 		})
 	})
-}
-
-type MockDestionatin struct {
-	invoke bool
-}
-
-func (mock *MockDestionatin) SendReport(m *Metric) error {
-	mock.invoke = true
-	return nil
 }
