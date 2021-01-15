@@ -6,25 +6,33 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os/exec"
 	"path"
+	"time"
 )
 
-// CreateJSONFile 运行 goaccess 生成 json 文件, 使用 files 作为输入文件，生成的文件存放到 dest
-func CreateJSONFile(files []string, dest string) error {
+// CreateOutputFile 运行 goaccess 生成 json 文件, gzips 是可以用 gzip 读取的文件
+// 使用 gunzip 命去读取输入文件，生成 json 和 html 文件
+func CreateOutputFile(zipfiles []string, dest string) error {
 	outPath := path.Dir(path.Clean(dest))
-	res, err := readLogFile(files)
+	log.Printf("the outpath is : %s\n", outPath)
+
+	res, err := readLogFile(zipfiles)
 	if err != nil {
 		return fmt.Errorf("read gunzip command output failure. %w", err)
 	}
 
 	// write the gzip command output to goaccess stdin
-	jsonFile := fmt.Sprintf("%s/report.json", outPath)
-	htmlFile := fmt.Sprintf("%s/report.html", outPath)
+	json := fmt.Sprintf("%s.json", time.Now().Format("20060102"))
+	html := fmt.Sprintf("%s.html", time.Now().Format("20060102"))
+
 	gaCmd := exec.Command(
 		"goaccess", "--log-format=COMBINED",
-		"-o", jsonFile,
-		"-o", htmlFile)
+		"-o", path.Join(outPath, json),
+		"-o", path.Join(outPath, html))
+	log.Printf("run cmd: %s", gaCmd) // record log
+
 	gaPipe, err := gaCmd.StdinPipe()
 	if err != nil {
 		return fmt.Errorf("create goaccess input pipe failure. %w", err)
@@ -37,7 +45,7 @@ func CreateJSONFile(files []string, dest string) error {
 	_, err = gaCmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("run goaccess failure. %w", err)
-	} /*  */
+	}
 	return nil
 }
 

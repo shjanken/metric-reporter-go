@@ -12,14 +12,14 @@ type Rsync struct {
 	Dest string
 }
 
-type output struct {
+type Output struct {
 	Haicj string
 	Esclt string
 }
 
 // Analysis 代表配置文了里面得 `analysis` 配置项目
 type Analysis struct {
-	output *output
+	Output *Output
 }
 
 // Config 是一的存放了配置文件内容的结构体
@@ -51,7 +51,7 @@ func ReadConfig(confReader ConfReader) (*Config, error) {
 		},
 
 		Analysis: &Analysis{
-			output: &output{
+			Output: &Output{
 				Haicj: viper.GetString("analysis.output.haicj"),
 				Esclt: viper.GetString("analysis.output.esclt"),
 			},

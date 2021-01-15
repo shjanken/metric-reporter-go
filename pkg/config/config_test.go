@@ -14,10 +14,10 @@ func TestReadConfig(t *testing.T) {
 			conf, err := ReadConfig(cr)
 
 			So(err, ShouldBeNil)
-			So(conf.Analysis.output.Haicj,
+			So(conf.Analysis.Output.Haicj,
 				ShouldEqual,
 				"/home/shjanken/nginx-logs/")
-			So(conf.Analysis.output.Esclt,
+			So(conf.Analysis.Output.Esclt,
 				ShouldEqual,
 				"/home/shjanken/nginx-logs/")
 			So(conf.Esclt.Src,

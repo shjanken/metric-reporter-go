@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/shjanken/metric_reporter/cmd/metric/app"
 	"github.com/shjanken/metric_reporter/pkg/config"
@@ -26,11 +28,13 @@ func main() {
 	}
 
 	// 创建用于分析的 json 文件
-	if err = app.CreateJSONFile(
+	t := time.Now()
+	fmt.Printf("%s/access.log-%s.gz\n", conf.Esclt.Dest, t.Format("20060102"))
+	if err = app.CreateOutputFile(
 		[]string{
-			"/home/shjanken/nginx-logs/esclt/access.log-20210111",
+			fmt.Sprintf("%s/access.log-%s.gz", conf.Esclt.Dest, t.Format("20060102")),
 		},
-		"/home/shjanken/nginx-logs/report.json",
+		conf.Analysis.Output.Esclt,
 	); err != nil {
 		log.Fatalf("create json file failure. %v", err)
 	}
