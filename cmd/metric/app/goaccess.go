@@ -15,7 +15,11 @@ import (
 // CreateOutputFile 运行 goaccess 生成 json 文件, gzips 是可以用 gzip 读取的文件
 // 使用 gunzip 命去读取输入文件，生成 json 和 html 文件
 func CreateOutputFile(zipfiles []string, dest string) error {
-	outPath := path.Dir(path.Clean(dest))
+	for _, f := range zipfiles {
+		log.Printf("analysis file: %s\n", f)
+	}
+
+	outPath := path.Clean(dest)
 	log.Printf("the outpath is : %s\n", outPath)
 
 	res, err := readLogFile(zipfiles)
@@ -27,6 +31,7 @@ func CreateOutputFile(zipfiles []string, dest string) error {
 	json := fmt.Sprintf("%s.json", time.Now().Format("20060102"))
 	html := fmt.Sprintf("%s.html", time.Now().Format("20060102"))
 
+	// 调用 `goaccess` 外部命令
 	gaCmd := exec.Command(
 		"goaccess", "--log-format=COMBINED",
 		"-o", path.Join(outPath, json),
@@ -49,6 +54,8 @@ func CreateOutputFile(zipfiles []string, dest string) error {
 	return nil
 }
 
+// readLogFile use gunzip external command to read gzip files
+// return `[]byte`
 func readLogFile(files []string) ([]byte, error) {
 	// use gnuzip read archive files
 	// read the result from std output pipe
@@ -60,6 +67,8 @@ func readLogFile(files []string) ([]byte, error) {
 	}
 
 	gzipCmd := exec.Command("gunzip", cmdStr...)
+	log.Printf("run cmd: %s\n", gzipCmd)
+
 	gzipOutPipe, err := gzipCmd.StdoutPipe()
 	if err != nil {
 		return nil, fmt.Errorf("create gunzip output pipe failure. %w", err)

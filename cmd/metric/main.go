@@ -29,14 +29,24 @@ func main() {
 
 	// 创建用于分析的 json 文件
 	t := time.Now()
-	fmt.Printf("%s/access.log-%s.gz\n", conf.Esclt.Dest, t.Format("20060102"))
+	// 分析 esclt 域名的日志文件
 	if err = app.CreateOutputFile(
+		// esclt 需要分析的文件有2个
 		[]string{
 			fmt.Sprintf("%s/access.log-%s.gz", conf.Esclt.Dest, t.Format("20060102")),
+			fmt.Sprintf("%s/app.esclt.log-%s.gz", conf.Esclt.Dest, t.Format("20060102")),
 		},
 		conf.Analysis.Output.Esclt,
 	); err != nil {
-		log.Fatalf("create json file failure. %v", err)
+		log.Fatalf("analysis esclt logs failure. %v", err)
+	}
+
+	// 分析 haicj 域名的日志文件
+	if err = app.CreateOutputFile(
+		[]string{fmt.Sprintf("%s/access.log-%s.gz", conf.Haicj.Dest, t.Format("20060102"))},
+		conf.Analysis.Output.Haicj,
+	); err != nil {
+		log.Fatalf("analysis haicj logs failure. %v", err)
 	}
 }
 
@@ -69,6 +79,7 @@ func rsync(src, dest string) error {
 		rOpt,
 	)
 
+	task.Log()
 	return task.Run()
 }
 
