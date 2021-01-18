@@ -4,40 +4,32 @@ import (
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/spf13/viper"
 )
 
 func TestReadConfig(t *testing.T) {
 	Convey("test config pakcage", t, func() {
-		cr := &testConfReader{}
-		Convey("test read config file", func() {
-			conf, err := ReadConfig(cr)
+		Convey("test read config with test ReadInConf", func() {
+			testConf := NewTestPath()
 
-			So(err, ShouldBeNil)
-			So(conf.Analysis.Output.Haicj,
-				ShouldEqual,
-				"/home/shjanken/nginx-logs/")
-			So(conf.Analysis.Output.Esclt,
-				ShouldEqual,
-				"/home/shjanken/nginx-logs/")
-			So(conf.Esclt.Src,
-				ShouldEqual,
-				"root@aliyun:/usr/local/openresty/nginx/logs")
-			So(conf.Esclt.Dest,
-				ShouldEqual,
-				"/home/shjanken/nginx-logs/esclt")
+			conf, err := ReadConfig(testConf)
+
+			if err != nil {
+				t.Fatalf("read conf file failure %v", err)
+			}
+			So(conf.Analysis.Output.Haicj, ShouldEqual, "/home/shjanken/nginx-logs/output/haicj/")
+			So(conf.Esclt.Dest, ShouldEqual, "/home/shjanken/nginx-logs/esclt")
+		})
+		Convey("test read product config", func() {
+			productConf := NewProductPath()
+
+			conf, err := ReadConfig(productConf)
+
+			if err != nil {
+				t.Fatalf("read conf file failure %v", err)
+			}
+
+			So(conf.Analysis.Output.Haicj, ShouldEqual, "/home/shjanken/nginx-logs/output/haicj/")
+			So(conf.Esclt.Dest, ShouldEqual, "/home/shjanken/nginx-logs/esclt")
 		})
 	})
-}
-
-type testConfReader struct{}
-
-func (cr *testConfReader) ReadInConfig() error {
-	// ReadConfig use viper return config value
-	viper.AddConfigPath("./../../configs") // 当的 config 目录下
-
-	viper.SetConfigName("test")
-	viper.SetConfigType("yaml")
-
-	return viper.ReadInConfig()
 }

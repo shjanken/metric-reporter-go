@@ -12,6 +12,7 @@ type Rsync struct {
 	Dest string
 }
 
+// Output object
 type Output struct {
 	Haicj string
 	Esclt string
@@ -57,4 +58,41 @@ func ReadConfig(confReader ConfReader) (*Config, error) {
 			},
 		},
 	}, nil
+}
+
+// Path config 的配置文件设置
+type path struct {
+	paths []string
+}
+
+// NewProductPath 创建生产环境的 config 文件读取路径
+func NewProductPath() ConfReader {
+	return &path{
+		[]string{
+			"/etc/metric-reporter/config",
+			"$HOME/.metric-reporter/config",
+			".",
+		},
+	}
+}
+
+// NewTestPath 创建测试环境的 config 文件读取路径
+func NewTestPath() ConfReader {
+	return &path{
+		[]string{
+			"../../configs",
+		},
+	}
+}
+
+// ConfReader 创建生产环境的 config 文件的读取位置
+func (p *path) ReadInConfig() error {
+	for _, p := range p.paths {
+		viper.AddConfigPath(p)
+	}
+
+	viper.SetConfigType("yaml")
+	viper.SetConfigName("metric")
+
+	return viper.ReadInConfig()
 }

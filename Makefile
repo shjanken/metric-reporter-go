@@ -19,9 +19,13 @@ build-metric: clean
 	cp $(CONFIG_PATH)/metric.y* $(BINARY_PATH)/
 
 build-report: clean
-	echo "build report"
+	$(GOBUILD) -o $(BINARY_PATH)/report cmd/report/main.go
+	cp $(CONFIG_PATH)/metric.y* $(BINARY_PATH)/
 
 run-metric: build-metric
-	$(GORUN) cmd/metric/main.go
+	$(BINARY_PATH)/metric
+
+run-metric: build-report
+	$(BINARY_PATH)/report
 
 build: build-metric build-report
