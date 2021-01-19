@@ -44,6 +44,6 @@ func readMetricData(fileName string) {
 	var m ngx.Metric
 	m, ok := r.(ngx.Metric)
 	if ok {
-		fmt.Println(m)
+		fmt.Printf("%+v\n", m)
 	}
 }
