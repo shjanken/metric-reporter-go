@@ -23,10 +23,11 @@ const (
 
 // Bot 钉钉机器的配置信息
 type Bot struct {
-	URL   string
-	Token string
-	Temp  string
-	Data  interface{}
+	URL      string
+	Token    string
+	Tmpl     string
+	sendFunc func(url string, msg []byte) error
+	MsgType  MsgType
 }
 
 type robotTextContent struct {
@@ -36,6 +37,25 @@ type robotTextContent struct {
 type robotTextMsg struct {
 	MsgType string            `json:"msgtype"`
 	Text    *robotTextContent `json:"text"`
+}
+
+// NewBot 创建一个新的钉钉机器人对象
+// 默认的 msgtype 是 text (关于 msgtype , 可以查看钉钉机器人的文档)
+func NewBot(url, token, tmpl string) *Bot {
+	return &Bot{
+		url, token, tmpl, postSend, Text,
+	}
+}
+
+// PostSend 调的标准库里面的 http.Post 函数发送请求。
+// 为了解耦将这个函读独立出来处理
+func postSend(url string, data []byte) error {
+	_, err := http.Post(url, "application/json", bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func renderTmpl(writer io.Writer, t string, data interface{}) error {
@@ -52,18 +72,14 @@ func renderTmpl(writer io.Writer, t string, data interface{}) error {
 	return nil
 }
 
-func createMsg(mType MsgType, t string, data interface{}) (msg interface{}, err error) {
-	var content bytes.Buffer
-	if err = renderTmpl(&content, t, data); err != nil {
-		return
-	}
+func createMsg(mType MsgType, content string) (msg interface{}, err error) {
 
 	switch mType {
 	case Text:
 		msg = &robotTextMsg{
 			MsgType: "text",
 			Text: &robotTextContent{
-				Content: content.String(),
+				Content: content,
 			},
 		}
 	}
@@ -73,20 +89,15 @@ func createMsg(mType MsgType, t string, data interface{}) (msg interface{}, err 
 
 // ReportMetric 发送信息到钉钉机器人
 func (b *Bot) ReportMetric(metric interface{}) error {
-	robot := &robotTextMsg{
-		MsgType: "text",
-		Text: &robotTextContent{
-			Content: "hello world",
-		},
-	}
+	var byte bytes.Buffer
+	err := renderTmpl(&byte, b.Tmpl, metric)
+	msg, err := createMsg(b.MsgType, byte.String())
 
-	msg, err := json.Marshal(robot)
+	body, err := json.Marshal(msg)
 	if err != nil {
-		return fmt.Errorf("Encode robot msg error. %w", err)
+		return fmt.Errorf("render template failure %w", err)
 	}
 
-	dest := fmt.Sprintf("%s?access_token=%s", b.URL, b.Token)
-	http.Post(dest, "application/json", bytes.NewBuffer(msg))
-
-	return nil
+	url := fmt.Sprintf("%s?access_token=%s", b.URL, b.Token)
+	return b.sendFunc(url, body) // 实际调用外部服务发送消息
 }
