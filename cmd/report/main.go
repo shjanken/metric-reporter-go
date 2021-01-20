@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/shjanken/metric_reporter/pkg/reporter"
 	"github.com/shjanken/metric_reporter/pkg/reporter/ngx"
@@ -18,12 +19,25 @@ func main() {
 	}
 
 	for _, f := range os.Args[1:] {
-		readMetricData(f)
+		err := reportNgxMetricToDing(readNgxMetric(f))
+		if err != nil {
+			log.Fatalf("%v\n", err)
+		}
 	}
-
 }
 
-func readMetricData(fileName string) {
+func reportNgxMetricToDing(metric *ngx.Metric) error {
+	ddURL := os.Getenv(strings.ToUpper("dd_url"))
+	ddToken := os.Getenv(strings.ToUpper("dd_token"))
+
+	if ddURL == "" || ddToken == "" {
+		return fmt.Errorf("environments DD_URL and DD_TOKEN is required")
+	}
+
+	return nil
+}
+
+func readNgxMetric(fileName string) *ngx.Metric {
 	file, err := os.Open(fileName)
 	if err != nil {
 		log.Fatalf("open file failure %v", err)
@@ -43,7 +57,9 @@ func readMetricData(fileName string) {
 	// convert
 	var m ngx.Metric
 	m, ok := r.(ngx.Metric)
-	if ok {
-		fmt.Printf("%+v\n", m)
+	if !ok {
+		log.Fatalf("convert to ngx metric failure %v", err)
 	}
+
+	return &m
 }

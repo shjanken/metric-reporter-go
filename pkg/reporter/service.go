@@ -8,7 +8,7 @@ type MetricProvider interface {
 
 // Reporter report the metrci to somewhere
 type Reporter interface {
-	ReportMetric(metric interface{}) error
+	ReportMetric() error
 }
 
 // GetMetric 从 provider 里面读取数据，return structed data
@@ -17,6 +17,6 @@ func GetMetric(provider MetricProvider) (interface{}, error) {
 }
 
 // ReportMetric 调用 reporter 的方法，发送报告到指定的目的地
-func ReportMetric(reporter Reporter, metric interface{}) error {
-	return reporter.ReportMetric(metric)
+func ReportMetric(reporter Reporter) error {
+	return reporter.ReportMetric()
 }

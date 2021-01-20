@@ -6,54 +6,73 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"text/template"
-)
+	"time"
 
-// MsgType is dingding robot msg type.
-// eg,. text, link, card ...
-type MsgType int
-
-const (
-	// Text is dingding robot msg, msgtype: text
-	Text MsgType = iota
-	// Link is dingding robot msg, msgtype: link
-	Link
+	"github.com/shjanken/metric_reporter/pkg/reporter"
 )
 
 // Bot 钉钉机器的配置信息
 type Bot struct {
-	URL      string
-	Token    string
-	Tmpl     string
+	URL   string
+	Token string
+	// Tmpl     string
+	Msg      MsgData
 	sendFunc func(url string, msg []byte) error
-	MsgType  MsgType
 }
 
-type robotTextContent struct {
-	Content string `json:"content"`
-}
+// MsgData 代表了要发送的钉钉机器人的消息主体
+type MsgData map[string]interface{}
 
-type robotTextMsg struct {
-	MsgType string            `json:"msgtype"`
-	Text    *robotTextContent `json:"text"`
-}
-
-// NewBot 创建一个新的钉钉机器人对象
-// 默认的 msgtype 是 text (关于 msgtype , 可以查看钉钉机器人的文档)
-func NewBot(url, token, tmpl string) *Bot {
+// NewReporter 创建一个实现了 service.Reporter 接口的对象
+// url, token 是钉钉机器人的请求地址和 token
+// tmpl
+func NewReporter(url, token string, msg MsgData) reporter.Reporter {
 	return &Bot{
-		url, token, tmpl, postSend, Text,
+		url, token, msg, postSend,
+	}
+}
+
+// NewMarkdonwMsg 构造一个用来发送给 钉钉机器人 的消息对象，最后会被编码到 json
+// title, tmpl data 一起组成消息主题的内容，title 是消息的标题. 消息的 `content` 是使用 data 渲染 tmpl 模板得到的
+func NewMarkdonwMsg(title, tmpl string, data interface{}) MsgData {
+	var rendered bytes.Buffer
+	renderTmpl(&rendered, tmpl, data)
+
+	return map[string]interface{}{
+		"msgtype": "markdown",
+		"markdown": map[string]interface{}{
+			"title": title,
+			"text":  rendered.String(),
+		},
 	}
 }
 
 // PostSend 调的标准库里面的 http.Post 函数发送请求。
 // 为了解耦将这个函读独立出来处理
 func postSend(url string, data []byte) error {
-	_, err := http.Post(url, "application/json", bytes.NewBuffer(data))
+	log.Printf("Post data: %s\n", string(data))
+	log.Printf("Post url: %s\n", url)
+
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(data))
+	req.Header.Set("Content-type", "application/json")
+
 	if err != nil {
 		return err
 	}
+
+	client := http.Client{Timeout: time.Duration(10 * time.Second)}
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
+
+	respBody, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println(string(respBody))
 
 	return nil
 }
@@ -72,28 +91,13 @@ func renderTmpl(writer io.Writer, t string, data interface{}) error {
 	return nil
 }
 
-func createMsg(mType MsgType, content string) (msg interface{}, err error) {
-
-	switch mType {
-	case Text:
-		msg = &robotTextMsg{
-			MsgType: "text",
-			Text: &robotTextContent{
-				Content: content,
-			},
-		}
-	}
-
-	return
-}
-
 // ReportMetric 发送信息到钉钉机器人
-func (b *Bot) ReportMetric(metric interface{}) error {
-	var byte bytes.Buffer
-	err := renderTmpl(&byte, b.Tmpl, metric)
-	msg, err := createMsg(b.MsgType, byte.String())
+func (b *Bot) ReportMetric() error {
+	/* 	var byte bytes.Buffer
+	err := renderTmpl(&byte, b.MsgData, metric)
+	msg, err := createMsg(b.MsgType, byte.String()) */
 
-	body, err := json.Marshal(msg)
+	body, err := json.Marshal(b.Msg)
 	if err != nil {
 		return fmt.Errorf("render template failure %w", err)
 	}
