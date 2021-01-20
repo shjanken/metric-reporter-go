@@ -7,9 +7,10 @@ import (
 
 // General metrics
 type General struct {
-	Request    int `json:"valid_requests"`
-	Visitors   int `json:"unique_visitors"`
-	BrandWidth int `json:"bandwidth"`
+	Request    int    `json:"valid_requests"`
+	Visitors   int    `json:"unique_visitors"`
+	BrandWidth int    `json:"bandwidth"`
+	Date       string `json:"end_date"`
 }
 
 // Metric parsed from ngx logs
@@ -30,6 +31,7 @@ func (provider *MetricProvider) ReadMetric() (interface{}, error) {
 	if err := decoder.Decode(&m); err != nil {
 		return nil, err
 	}
+	m.General.BrandWidth = m.General.BrandWidth / 1024 / 1024
 
 	return m, nil
 }

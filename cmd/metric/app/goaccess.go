@@ -33,7 +33,9 @@ func CreateOutputFile(zipfiles []string, dest string) error {
 
 	// 调用 `goaccess` 外部命令
 	gaCmd := exec.Command(
-		"goaccess", "--log-format=COMBINED",
+		"goaccess",
+		"--log-format=COMBINED",
+		// `--date-format='%d%m%Y'`,
 		"-o", path.Join(outPath, json),
 		"-o", path.Join(outPath, html))
 	log.Printf("run cmd: %s", gaCmd) // record log

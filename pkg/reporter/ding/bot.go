@@ -20,7 +20,7 @@ type Bot struct {
 	URL   string
 	Token string
 	// Tmpl     string
-	Msg      MsgData
+	Msg      *MsgData
 	sendFunc func(url string, msg []byte) error
 }
 
@@ -30,7 +30,7 @@ type MsgData map[string]interface{}
 // NewReporter 创建一个实现了 service.Reporter 接口的对象
 // url, token 是钉钉机器人的请求地址和 token
 // tmpl
-func NewReporter(url, token string, msg MsgData) reporter.Reporter {
+func NewReporter(url, token string, msg *MsgData) reporter.Reporter {
 	return &Bot{
 		url, token, msg, postSend,
 	}
@@ -38,17 +38,37 @@ func NewReporter(url, token string, msg MsgData) reporter.Reporter {
 
 // NewMarkdonwMsg 构造一个用来发送给 钉钉机器人 的消息对象，最后会被编码到 json
 // title, tmpl data 一起组成消息主题的内容，title 是消息的标题. 消息的 `content` 是使用 data 渲染 tmpl 模板得到的
-func NewMarkdonwMsg(title, tmpl string, data interface{}) MsgData {
+func NewMarkdonwMsg(title, tmpl string, data interface{}) (*MsgData, error) {
 	var rendered bytes.Buffer
-	renderTmpl(&rendered, tmpl, data)
+	if err := renderTmpl(&rendered, tmpl, data); err != nil {
+		return nil, err
+	}
 
-	return map[string]interface{}{
+	return &MsgData{
 		"msgtype": "markdown",
 		"markdown": map[string]interface{}{
 			"title": title,
 			"text":  rendered.String(),
 		},
+	}, nil
+}
+
+// NewActionCardMsg 创建一个钉钉机器人的消息对象，类型是 actionCard
+func NewActionCardMsg(title, link, tmpl string, data interface{}) (msg *MsgData, err error) {
+	var content bytes.Buffer
+	err = renderTmpl(&content, tmpl, data)
+
+	msg = &MsgData{
+		"msgtype": "actionCard",
+		"actionCard": &MsgData{
+			"title":       title,
+			"text":        content.String(),
+			"singleTitle": "查看详细报告",
+			"singleURL":   link,
+		},
 	}
+
+	return
 }
 
 // PostSend 调的标准库里面的 http.Post 函数发送请求。
@@ -97,7 +117,7 @@ func (b *Bot) ReportMetric() error {
 	err := renderTmpl(&byte, b.MsgData, metric)
 	msg, err := createMsg(b.MsgType, byte.String()) */
 
-	body, err := json.Marshal(b.Msg)
+	body, err := json.Marshal(*b.Msg)
 	if err != nil {
 		return fmt.Errorf("render template failure %w", err)
 	}

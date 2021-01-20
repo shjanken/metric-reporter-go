@@ -15,7 +15,7 @@ func (f *fake) ReadMetric() (interface{}, error) {
 	return nil, nil
 }
 
-func (f *fake) ReportMetric(metric interface{}) error {
+func (f *fake) ReportMetric() error {
 	f.invoke = true
 	return nil
 }
@@ -37,7 +37,7 @@ func TestReportMetric(t *testing.T) {
 		Convey("should invoke Reporter interface func", func() {
 			f := &fake{false}
 
-			err := ReportMetric(f, nil)
+			err := ReportMetric(f)
 
 			So(err, ShouldBeNil)
 			So(f.invoke, ShouldBeTrue)

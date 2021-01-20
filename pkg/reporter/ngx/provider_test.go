@@ -31,7 +31,7 @@ func TestReadMetric(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(m.General.Request, ShouldEqual, 100)
 			So(m.General.Visitors, ShouldEqual, 120)
-			So(m.General.BrandWidth, ShouldEqual, 10)
+			So(m.General.BrandWidth, ShouldEqual, 10/1024/1024)
 		})
 
 		Convey("read metric from file", func() {
@@ -51,7 +51,7 @@ func TestReadMetric(t *testing.T) {
 
 			So(m.General.Request, ShouldEqual, 1048726)
 			So(m.General.Visitors, ShouldEqual, 54233)
-			So(m.General.BrandWidth, ShouldEqual, 19121648751)
+			So(m.General.BrandWidth, ShouldEqual, 19121648751/1024/1024)
 		})
 	})
 }
