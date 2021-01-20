@@ -35,7 +35,7 @@ func ReadNgxMetric(fileName string) (m *ngx.Metric, err error) {
 }
 
 // CreateNgxMetricReporter 创建 reporter 对象
-func CreateNgxMetricReporter(msgTitle string, metric *ngx.Metric) (r reporter.Reporter, err error) {
+func CreateNgxMetricReporter(msgTitle, link string, metric *ngx.Metric) (r reporter.Reporter, err error) {
 	ddURL := os.Getenv(strings.ToUpper("dd_url"))
 	ddToken := os.Getenv(strings.ToUpper("dd_token"))
 
@@ -45,13 +45,15 @@ func CreateNgxMetricReporter(msgTitle string, metric *ngx.Metric) (r reporter.Re
 
 	log.Printf("%+v\n", metric)
 
-	tmpl := fmt.Sprintf("%s **%s**", time.Now().Format("2006 01月02日"), msgTitle) +
+	// 计算昨天的日期作为标题
+	d := time.Now().AddDate(0, 0, -1)
+	tmpl := fmt.Sprintf("%s **%s**", d.Format("2006 01月02日"), msgTitle) +
 		`
 - 请求数量：{{.General.Request}}
 - 独立IP：  {{.General.Visitors}}
 - 使用带宽：{{.General.BrandWidth}}M`
 
-	msg, err := ding.NewActionCardMsg("test"+msgTitle, "http://www.esclt.net", tmpl, metric)
+	msg, err := ding.NewActionCardMsg(msgTitle, link, tmpl, metric)
 	r = ding.NewReporter(ddURL, ddToken, msg)
 
 	// reporter.ReportMetric(r)

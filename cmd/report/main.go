@@ -10,7 +10,7 @@ import (
 )
 
 const usage string = `Usage: 
-	report file.json msg-title`
+	report file.json msg-title link`
 
 func main() {
 	if len(os.Args[1:]) == 0 {
@@ -23,7 +23,7 @@ func main() {
 		log.Fatalf("read ngx metric from file failure, file name: %s. err: %v", os.Args[1], err)
 	}
 
-	r, err := app.CreateNgxMetricReporter(os.Args[2], m)
+	r, err := app.CreateNgxMetricReporter(os.Args[2], os.Args[3], m)
 
 	if err != nil {
 		log.Fatalf("create dingding reporter failure. %v", err)
