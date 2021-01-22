@@ -44,10 +44,9 @@ func CreateOutputFile(zipfiles []string, dest string) error {
 	if err != nil {
 		return fmt.Errorf("create goaccess input pipe failure. %w", err)
 	}
-	go func() {
-		defer gaPipe.Close()
-		io.WriteString(gaPipe, string(res))
-	}()
+
+	defer gaPipe.Close()
+	io.WriteString(gaPipe, string(res))
 
 	_, err = gaCmd.CombinedOutput()
 	if err != nil {
