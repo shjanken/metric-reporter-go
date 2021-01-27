@@ -36,8 +36,11 @@ func CreateOutputFile(zipfiles []string, dest string) error {
 		"goaccess",
 		"--log-format=COMBINED",
 		// `--date-format='%d%m%Y'`,
-		"-o", path.Join(outPath, json),
-		"-o", path.Join(outPath, html))
+		"--output", path.Join(outPath, json),
+		"--output", path.Join(outPath, html),
+		"-", // 这个参数一定要加。表示个管道读取数据。不加的的话，在使用 `crontab` 运行程序会出错
+	)
+
 	log.Printf("run cmd: %s", gaCmd) // record log
 
 	gaPipe, err := gaCmd.StdinPipe()
