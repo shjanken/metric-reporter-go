@@ -48,8 +48,11 @@ func CreateOutputFile(zipfiles []string, dest string) error {
 		return fmt.Errorf("create goaccess input pipe failure. %w", err)
 	}
 
-	defer gaPipe.Close()
-	io.WriteString(gaPipe, string(res))
+	// 这里必须在一个 goroutine 里面执行，不然程序的运行会卡住
+	go func() {
+		defer gaPipe.Close()
+		io.WriteString(gaPipe, string(res))
+	}()
 
 	_, err = gaCmd.CombinedOutput()
 	if err != nil {
