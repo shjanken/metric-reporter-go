@@ -1,7 +1,7 @@
 ---
 rsync:
   haicj:
-    src: root@nginx:/usr/local/nginx/logs/
+    src: root@nginx:/var/log/nginx/
     dest: /home/shjanken/nginx-logs/haicj
   esclt:
     src: root@aliyun:/usr/local/openresty/nginx/logs/
